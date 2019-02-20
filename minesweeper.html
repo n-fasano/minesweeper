@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <link
+      rel="stylesheet"
+      href="https://use.fontawesome.com/releases/v5.7.2/css/all.css"
+      integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr"
+      crossorigin="anonymous"
+    />
+    <title>Minesweeper</title>
+    <style>
+      h1,
+      form {
+        text-align: center;
+      }
+
+      h1 i {
+        color: burlywood;
+        text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;
+      }
+
+      h1 {
+        color: burlywood;
+        text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;
+      }
+
+      form {
+        margin-bottom: 20px;
+      }
+
+      table {
+        border-collapse: collapse;
+        margin: 0 auto;
+      }
+
+      td {
+        width: 25px;
+        height: 25px;
+        border: 1px solid white;
+        cursor: default;
+        text-align: center;
+        font-weight: bold;
+        position: relative;
+        padding: 0;
+        display: inline-block;
+      }
+
+      td > i {
+        color: red;
+        transition: transform 1s ease-out;
+      }
+
+      .aboveCell {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 25px;
+        height: 25px;
+        text-align: center;
+        box-sizing: border-box;
+        padding-top: 4px;
+        z-index: 4;
+        background-color: burlywood;
+      }
+
+      .aboveCell i {
+        color: firebrick;
+      }
+
+      .hideCache div {
+        display: none;
+      }
+
+      .hideCache {
+        border-color: white;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Minesweeper <i class="fas fa-bomb"></i></h1>
+    <form action="">
+      <label for="gridSize">20 x 20</label>
+      <input
+        name="gridSize"
+        data-height="20"
+        data-width="20"
+        data-bombnumber="50"
+        type="radio"
+        selected
+      />
+      <label for="gridSize">20 x 30</label>
+      <input
+        name="gridSize"
+        data-height="20"
+        data-width="30"
+        data-bombnumber="100"
+        type="radio"
+      />
+      <label for="gridSize">30 x 50</label>
+      <input
+        name="gridSize"
+        data-height="30"
+        data-width="50"
+        data-bombnumber="200"
+        type="radio"
+      />
+    </form>
+    <table id="table"></table>
+    <script>
+      const grid = document.querySelector("#table");
+
+      function createGridArray(width, height, bombNumber) {
+        let gridArray = [];
+        for (let i = 0; i < height; i++) {
+          gridArray[i] = [];
+          for (let j = 0; j < width; j++) {
+            gridArray[i].push(0);
+          }
+        }
+
+        let k = 0;
+        while (k < bombNumber) {
+          let randRow = Math.floor(Math.random() * height);
+          let randCell = Math.floor(Math.random() * width);
+          if (gridArray[randRow][randCell] !== -1) {
+            gridArray[randRow][randCell] = -1;
+            k++;
+          }
+        }
+
+        for (let i = 0; i < height; i++) {
+          for (let j = 0; j < width; j++) {
+            if (gridArray[i][j] != -1) {
+              let count = 0;
+              if (gridArray[i][j - 1] == -1) count++;
+              if (gridArray[i][j + 1] == -1) count++;
+              if (i > 0 && gridArray[i - 1][j - 1] == -1) count++;
+              if (i > 0 && gridArray[i - 1][j] == -1) count++;
+              if (i > 0 && gridArray[i - 1][j + 1] == -1) count++;
+              if (i < height - 1 && gridArray[i + 1][j - 1] == -1) count++;
+              if (i < height - 1 && gridArray[i + 1][j] == -1) count++;
+              if (i < height - 1 && gridArray[i + 1][j + 1] == -1) count++;
+              gridArray[i][j] = count;
+            }
+          }
+        }
+
+        let bombIcon = document.createElement("I");
+        let newIAttr = document.createAttribute("class");
+        newIAttr.value = "fas fa-bomb";
+        bombIcon.setAttributeNode(newIAttr);
+        grid.innerHTML = "";
+        for (let i = 0; i < gridArray.length; i++) {
+          let newRow = document.createElement("TR");
+          let newAttr = document.createAttribute("id");
+          newAttr.value = "row" + (i + 1);
+          newRow.setAttributeNode(newAttr);
+          grid.appendChild(newRow);
+          for (let j = 0; j < gridArray[i].length; j++) {
+            let newCell = document.createElement("TD");
+            let newAttr = document.createAttribute("id");
+            newAttr.value = "cell" + (i * width + j + 1);
+            newCell.setAttributeNode(newAttr);
+
+            newDiv = document.createElement("DIV");
+            newAttr = document.createAttribute("class");
+            newAttr.value = "aboveCell";
+            newDiv.setAttributeNode(newAttr);
+
+            newCell.appendChild(newDiv);
+
+            if (gridArray[i][j] == -1) {
+              newCell.appendChild(bombIcon);
+            } else {
+              let newText = document.createTextNode(gridArray[i][j]);
+              newCell.appendChild(newText);
+            }
+            if (gridArray[i][j] == 0) {
+              let newAttr = document.createAttribute("data-zero");
+              newCell.setAttributeNode(newAttr);
+            }
+            document.getElementById("row" + (i + 1)).appendChild(newCell);
+
+            function clickHandler() {
+              console.log(this.classList);
+              if (hasClass(this, "hideCache")) {
+                this.childNodes[0].style.display = "none";
+                this.style.borderColor = "gray";
+                if (this.contains(bombIcon)) {
+                  this.childNodes[1].style.transform = "scale(29)";
+                  revealAll();
+                }
+                if (this.hasAttribute("data-zero")) {
+                  reveal([this], [], false);
+                }
+              } else {
+                reveal([this], [], true);
+              }
+            }
+
+            function hasClass(element, className) {
+              return (
+                (" " + element.className + " ").indexOf(" " + className + " ") >
+                -1
+              );
+            }
+
+            function rightClickHandler(e) {
+              e.preventDefault();
+              if (this.innerHTML == "") {
+                this.innerHTML = '<i class="far fa-flag"></i>';
+                document
+                  .querySelector("#cell" + (i * width + j + 1))
+                  .removeEventListener("click", clickHandler);
+              } else if (this.innerHTML == '<i class="far fa-flag"></i>') {
+                this.innerHTML = '<i class="fas fa-question"></i>';
+              } else {
+                this.innerHTML = "";
+                document
+                  .querySelector("#cell" + (i * width + j + 1))
+                  .addEventListener("click", clickHandler);
+              }
+            }
+
+            document
+              .querySelector("#cell" + (i * width + j + 1))
+              .addEventListener("click", clickHandler);
+            document
+              .querySelector("#cell" + (i * width + j + 1) + " .aboveCell")
+              .addEventListener("contextmenu", rightClickHandler);
+          }
+        }
+
+        function revealAll() {
+          document.querySelectorAll("td").forEach(function(cell) {
+            cell.childNodes[0].style.display = "none";
+          });
+        }
+
+        function reveal(cellsToReveal, forbiddenIDs, cellClickedIsHidden) {
+          let id = Number(cellsToReveal[0].getAttribute("id").slice(4));
+          cellsToReveal.splice(0, 1);
+          let cell;
+          let aboveCellsToReveal = [];
+
+          if (forbiddenIDs.indexOf(id) == -1) {
+            forbiddenIDs.push(id);
+            // CASES AU-DESSUS
+            if (id > width) {
+              if ((id - 1) % height !== 0) {
+                cell = document.getElementById("cell" + (id - width - 1));
+
+                if (cellClickedIsHidden) {
+                  aboveCellsToReveal.push(cell);
+                } else if (!cellClickedIsHidden && !cell.contains(bombIcon)) {
+                  aboveCellsToReveal.push(cell);
+                }
+                if (
+                  cell.hasAttribute("data-zero") &&
+                  cellsToReveal.indexOf(cell) == -1
+                ) {
+                  cellsToReveal.push(cell);
+                }
+              }
+
+              cell = document.getElementById("cell" + (id - width));
+              if (cellClickedIsHidden) {
+                aboveCellsToReveal.push(cell);
+              } else if (!cellClickedIsHidden && !cell.contains(bombIcon)) {
+                aboveCellsToReveal.push(cell);
+              }
+              if (
+                cell.hasAttribute("data-zero") &&
+                cellsToReveal.indexOf(cell) == -1
+              ) {
+                cellsToReveal.push(cell);
+              }
+
+              if (id % height !== 0) {
+                cell = document.getElementById("cell" + (id - width + 1));
+                if (cellClickedIsHidden) {
+                  aboveCellsToReveal.push(cell);
+                } else if (!cellClickedIsHidden && !cell.contains(bombIcon)) {
+                  aboveCellsToReveal.push(cell);
+                }
+                if (
+                  cell.hasAttribute("data-zero") &&
+                  cellsToReveal.indexOf(cell) == -1
+                ) {
+                  cellsToReveal.push(cell);
+                }
+              }
+            }
+
+            // CASES EN-DESSOUS
+            if (id < width * height - width) {
+              if ((id - 1) % height !== 0) {
+                cell = document.getElementById(
+                  "cell" + (id - 1 + Number(width))
+                );
+                if (cellClickedIsHidden) {
+                  aboveCellsToReveal.push(cell);
+                } else if (!cellClickedIsHidden && !cell.contains(bombIcon)) {
+                  aboveCellsToReveal.push(cell);
+                }
+                if (
+                  cell.hasAttribute("data-zero") &&
+                  cellsToReveal.indexOf(cell) == -1
+                ) {
+                  cellsToReveal.push(cell);
+                }
+              }
+
+              cell = document.getElementById("cell" + (Number(width) + id));
+              if (cellClickedIsHidden) {
+                aboveCellsToReveal.push(cell);
+              } else if (!cellClickedIsHidden && !cell.contains(bombIcon)) {
+                aboveCellsToReveal.push(cell);
+              }
+              if (
+                cell.hasAttribute("data-zero") &&
+                cellsToReveal.indexOf(cell) == -1
+              ) {
+                cellsToReveal.push(cell);
+              }
+
+              if (id % height !== 0) {
+                cell = document.getElementById(
+                  "cell" + (Number(width) + id + 1)
+                );
+                if (cellClickedIsHidden) {
+                  aboveCellsToReveal.push(cell);
+                } else if (!cellClickedIsHidden && !cell.contains(bombIcon)) {
+                  aboveCellsToReveal.push(cell);
+                }
+                if (
+                  cell.hasAttribute("data-zero") &&
+                  cellsToReveal.indexOf(cell) == -1
+                ) {
+                  cellsToReveal.push(cell);
+                }
+              }
+            }
+
+            // CASE DEVANT
+            if (id < width * height - 1 && id % height !== 0) {
+              cell = document.getElementById("cell" + (id + 1));
+              if (cellClickedIsHidden) {
+                aboveCellsToReveal.push(cell);
+              } else if (!cellClickedIsHidden && !cell.contains(bombIcon)) {
+                aboveCellsToReveal.push(cell);
+              }
+              if (
+                cell.hasAttribute("data-zero") &&
+                cellsToReveal.indexOf(cell) == -1
+              ) {
+                cellsToReveal.push(cell);
+              }
+            }
+
+            // CASE DERRIERE
+            if (id > 1 && (id - 1) % height !== 0) {
+              cell = document.getElementById("cell" + (id - 1));
+              if (cellClickedIsHidden) {
+                aboveCellsToReveal.push(cell);
+              } else if (!cellClickedIsHidden && !cell.contains(bombIcon)) {
+                aboveCellsToReveal.push(cell);
+              }
+              if (
+                cell.hasAttribute("data-zero") &&
+                cellsToReveal.indexOf(cell) == -1
+              ) {
+                cellsToReveal.push(cell);
+              }
+            }
+
+            aboveCellsToReveal.forEach(function(c) {
+              c.classList.add("hideCache");
+            });
+          }
+
+          if (cellsToReveal.length > 0) {
+            reveal(cellsToReveal, forbiddenIDs, true);
+          }
+        }
+
+        return gridArray;
+      }
+
+      const radio = document.getElementsByName("gridSize");
+      document.getElementsByName("gridSize").forEach(input =>
+        input.addEventListener("change", function() {
+          createGridArray(
+            this.dataset.width,
+            this.dataset.height,
+            this.dataset.bombnumber
+          );
+        })
+      );
+    </script>
+  </body>
+</html>
