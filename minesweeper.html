@@ -31,26 +31,43 @@
         margin-bottom: 20px;
       }
 
+      fieldset {
+        margin-right: 5px;
+        border: 0.5px solid black;
+        background-color: burlywood;
+        display: inline-block;
+      }
+
+      input{
+        vertical-align: middle;
+      }
+
+      label{
+        padding-top: 10px;
+      }
+
       table {
         border-collapse: collapse;
         margin: 0 auto;
+        border: 1px solid burlywood;
+        padding: 0;
       }
 
       td {
         width: 25px;
         height: 25px;
-        border: 1px solid white;
         cursor: default;
         text-align: center;
         font-weight: bold;
         position: relative;
-        padding: 0;
+        box-sizing: border-box;
+        padding-top: 4px;
         display: inline-block;
       }
 
       td > i {
-        color: red;
-        transition: transform 1s ease-out;
+        color: firebrick;
+        transition: transform 1s ease-in-out;
       }
 
       .aboveCell {
@@ -62,8 +79,10 @@
         text-align: center;
         box-sizing: border-box;
         padding-top: 4px;
-        z-index: 4;
+        z-index: 1;
         background-color: burlywood;
+        border: 1px solid white;
+        border-radius: 2px;
       }
 
       .aboveCell i {
@@ -74,45 +93,157 @@
         display: none;
       }
 
-      .hideCache {
-        border-color: white;
+      #flags {
+        text-align: center;
+        margin-top: 10px;
+        color: firebrick;
+        font-size: 20px;
+      }
+
+      #startButton {
+        background-color: burlywood;
+      }
+
+      #veil {
+        z-index: 2;
+        width: 100%;
+        height: 100%;
+        background: black;
+        top: 0;
+        left: 0;
+        position: fixed;
+        opacity: 0.65;
+        display: none;
+      }
+
+      #controls {
+        z-index: 3;
+        left: 40%;
+        top: 15vh;
+        position: fixed;
+        width: 20%;
+        background: burlywood;
+        border: 2px solid black;
+        border-radius: 25px;
+        opacity: 0.8;
+        display: none;
+        padding: 20px;
+      }
+
+      #controls button{
+        margin: 0 auto;
+        display: block;
+        width: 100px;
+      }
+
+      *::selection{
+        color: white;
       }
     </style>
   </head>
   <body>
-    <h1>Minesweeper <i class="fas fa-bomb"></i></h1>
-    <form action="">
-      <label for="gridSize">20 x 20</label>
-      <input
-        name="gridSize"
-        data-height="20"
-        data-width="20"
-        data-bombnumber="50"
-        type="radio"
-        selected
-      />
-      <label for="gridSize">20 x 30</label>
-      <input
-        name="gridSize"
-        data-height="20"
-        data-width="30"
-        data-bombnumber="100"
-        type="radio"
-      />
-      <label for="gridSize">30 x 50</label>
-      <input
-        name="gridSize"
-        data-height="30"
-        data-width="50"
-        data-bombnumber="200"
-        type="radio"
-      />
-    </form>
-    <table id="table"></table>
+    <header>
+      <h1>
+        Minesweeper
+        <i class="fas fa-bomb"></i>
+      </h1>
+      <form action="" id="form">
+        <fieldset>
+          <label for="gridSize">20 x 20</label>
+          <input
+            checked="checked"
+            name="gridSize"
+            data-height="20"
+            data-width="20"
+            data-bombnumber="5"
+            type="radio"
+          />
+        </fieldset>
+        <fieldset>
+          <label for="gridSize">20 x 30</label>
+          <input
+            name="gridSize"
+            data-height="20"
+            data-width="30"
+            data-bombnumber="100"
+            type="radio"
+          />
+        </fieldset>
+        <fieldset>
+          <label for="gridSize">30 x 50</label>
+          <input
+            name="gridSize"
+            data-height="30"
+            data-width="50"
+            data-bombnumber="200"
+            type="radio"
+          />
+        </fieldset>
+        <button id="startButton">Go !</button>
+      </form>
+    </header>
+    <main>
+      <table id="table"></table>
+      <div id="flags"></div>
+    </main>
+    <div id="veil"></div>
+    <div id="controls">
+      <h2>Objectif :</h2>
+      <p> - Révélez toutes les cases sans bombe.</p>
+      <p> - Vous perdez lorsque vous cliquez sur une bombe.</p>
+      <h2>Contrôles :</h2>
+      <p><strong>Clic gauche :</strong> révèle une case.</p>
+      <p><strong>Clic droit :</strong> <ol><li>Pose un drapeau sur une case non révélée (bloque le clic) ;</li>
+      <li>Le remplace par un point d'interrogation ;</li>
+    <li>Enlève le point d'interrogation.</li></ol></p>
+      <p><strong>Clic droit + clic gauche sur une case révélée :</strong> découvre les cases adjacentes sauf celles marquées par un drapeau.</p>
+      <button id="ok">Compris</button>
+    </div>
     <script>
       const grid = document.querySelector("#table");
+      const form = document.querySelector("#form");
+      const startButton = document.querySelector("#startButton");
+      const gridSize = document.getElementsByName("gridSize");
+      const veil = document.querySelector("#veil");
+      const controls = document.querySelector("#controls");
+      const ok = document.querySelector("#ok");
+      startButton.addEventListener("click", function(e) {
+        e.preventDefault();
+        // form.style.display = "none";
+        if (this.textContent == "Go !") {
+          this.textContent = "Try again ?";
+          setTimeout(alertControls, 1000);
+        }
+        createGridArray(
+          document.querySelector('input[name="gridSize"]:checked').dataset.width,
+          document.querySelector('input[name="gridSize"]:checked').dataset.height,
+          document.querySelector('input[name="gridSize"]:checked').dataset.bombnumber
+        );
+      });
+
+      ok.addEventListener("click", function(){
+        veil.style.display = "none";
+        controls.style.display = "none";
+        
+      })
+
+      function alertControls() {
+        veil.style.display = "block";
+        controls.style.display = "block";
+      }
+
+      // createGridArray(20, 20, 50);
+
+      function hasClass(element, className) {
+        return (
+          (" " + element.className + " ").indexOf(" " + className + " ") > -1
+        );
+      }
 
       function createGridArray(width, height, bombNumber) {
+        let flagCount = bombNumber;
+        const flags = document.getElementById("flags");
+        flags.innerHTML = flagCount + '<i class="far fa-flag"></i>';
         let gridArray = [];
         for (let i = 0; i < height; i++) {
           gridArray[i] = [];
@@ -148,10 +279,6 @@
           }
         }
 
-        let bombIcon = document.createElement("I");
-        let newIAttr = document.createAttribute("class");
-        newIAttr.value = "fas fa-bomb";
-        bombIcon.setAttributeNode(newIAttr);
         grid.innerHTML = "";
         for (let i = 0; i < gridArray.length; i++) {
           let newRow = document.createElement("TR");
@@ -171,7 +298,10 @@
             newDiv.setAttributeNode(newAttr);
 
             newCell.appendChild(newDiv);
-
+            let bombIcon = document.createElement("I");
+            let newIAttr = document.createAttribute("class");
+            newIAttr.value = "fas fa-bomb";
+            bombIcon.setAttributeNode(newIAttr);
             if (gridArray[i][j] == -1) {
               newCell.appendChild(bombIcon);
             } else {
@@ -181,192 +311,141 @@
             if (gridArray[i][j] == 0) {
               let newAttr = document.createAttribute("data-zero");
               newCell.setAttributeNode(newAttr);
+              newCell.style.color = "white";
             }
             document.getElementById("row" + (i + 1)).appendChild(newCell);
 
             function clickHandler() {
-              console.log(this.classList);
-              if (hasClass(this, "hideCache")) {
-                this.childNodes[0].style.display = "none";
-                this.style.borderColor = "gray";
+              if (!hasClass(this, "hideCache")) {
+                this.classList.add("hideCache");
                 if (this.contains(bombIcon)) {
-                  this.childNodes[1].style.transform = "scale(29)";
-                  revealAll();
+                  revealAll(this);
                 }
                 if (this.hasAttribute("data-zero")) {
-                  reveal([this], [], false);
+                  reveal([this], []);
                 }
-              } else {
-                reveal([this], [], true);
               }
-            }
-
-            function hasClass(element, className) {
-              return (
-                (" " + element.className + " ").indexOf(" " + className + " ") >
-                -1
-              );
             }
 
             function rightClickHandler(e) {
               e.preventDefault();
-              if (this.innerHTML == "") {
-                this.innerHTML = '<i class="far fa-flag"></i>';
-                document
-                  .querySelector("#cell" + (i * width + j + 1))
-                  .removeEventListener("click", clickHandler);
-              } else if (this.innerHTML == '<i class="far fa-flag"></i>') {
-                this.innerHTML = '<i class="fas fa-question"></i>';
+              if (!hasClass(this, "hideCache")) {
+                if (this.childNodes[0].innerHTML == "") {
+                  this.childNodes[0].innerHTML = '<i class="far fa-flag"></i>';
+                  document
+                    .querySelector("#cell" + (i * width + j + 1))
+                    .removeEventListener("click", clickHandler);
+                  flagCount--;
+                  flags.innerHTML = flagCount + '<i class="far fa-flag"></i>';
+                } else if (
+                  this.childNodes[0].innerHTML == '<i class="far fa-flag"></i>'
+                ) {
+                  this.childNodes[0].innerHTML =
+                    '<i class="fas fa-question"></i>';
+                  document
+                    .querySelector("#cell" + (i * width + j + 1))
+                    .addEventListener("click", clickHandler);
+                  flagCount++;
+                  flags.innerHTML = flagCount + '<i class="far fa-flag"></i>';
+                } else {
+                  this.childNodes[0].innerHTML = "";
+                }
               } else {
-                this.innerHTML = "";
-                document
-                  .querySelector("#cell" + (i * width + j + 1))
-                  .addEventListener("click", clickHandler);
+                this.addEventListener("mousedown", rightPlusLeftClickHandler);
+                this.addEventListener("mouseup", removeHandlers);
               }
+            }
+
+            function rightPlusLeftClickHandler(e) {
+              console.log("R+L Handler !");
+              reveal([this], []);
+            }
+
+            function removeHandlers() {
+              console.log("Remover handler !");
+              this.removeEventListener("mousedown", rightPlusLeftClickHandler);
+              this.removeEventListener("mouseup", removeHandlers);
             }
 
             document
               .querySelector("#cell" + (i * width + j + 1))
               .addEventListener("click", clickHandler);
             document
-              .querySelector("#cell" + (i * width + j + 1) + " .aboveCell")
+              .querySelector("#cell" + (i * width + j + 1))
               .addEventListener("contextmenu", rightClickHandler);
           }
         }
 
-        function revealAll() {
+        function revealAll(doomCell) {
+          doomCell.childNodes[1].style.transform = "scale(300)";
           document.querySelectorAll("td").forEach(function(cell) {
             cell.childNodes[0].style.display = "none";
+            cell.style.color = "firebrick";
           });
+          form.style.display = "block";
+          setTimeout(function(){
+            createGridArray(20, 20, 50);
+          }, 5000);
         }
 
-        function reveal(cellsToReveal, forbiddenIDs, cellClickedIsHidden) {
+        function reveal(cellsToReveal, forbiddenIDs) {
+          let bombIcon = document.createElement("I");
+          let newIAttr = document.createAttribute("class");
+          newIAttr.value = "fas fa-bomb";
+          bombIcon.setAttributeNode(newIAttr);
+
           let id = Number(cellsToReveal[0].getAttribute("id").slice(4));
           cellsToReveal.splice(0, 1);
           let cell;
           let aboveCellsToReveal = [];
+          let cellsAround = [];
 
           if (forbiddenIDs.indexOf(id) == -1) {
             forbiddenIDs.push(id);
             // CASES AU-DESSUS
             if (id > width) {
               if ((id - 1) % height !== 0) {
-                cell = document.getElementById("cell" + (id - width - 1));
-
-                if (cellClickedIsHidden) {
-                  aboveCellsToReveal.push(cell);
-                } else if (!cellClickedIsHidden && !cell.contains(bombIcon)) {
-                  aboveCellsToReveal.push(cell);
-                }
-                if (
-                  cell.hasAttribute("data-zero") &&
-                  cellsToReveal.indexOf(cell) == -1
-                ) {
-                  cellsToReveal.push(cell);
-                }
+                cellsAround.push(
+                  document.getElementById("cell" + (id - width - 1))
+                );
               }
-
-              cell = document.getElementById("cell" + (id - width));
-              if (cellClickedIsHidden) {
-                aboveCellsToReveal.push(cell);
-              } else if (!cellClickedIsHidden && !cell.contains(bombIcon)) {
-                aboveCellsToReveal.push(cell);
-              }
-              if (
-                cell.hasAttribute("data-zero") &&
-                cellsToReveal.indexOf(cell) == -1
-              ) {
-                cellsToReveal.push(cell);
-              }
-
+              cellsAround.push(document.getElementById("cell" + (id - width)));
               if (id % height !== 0) {
-                cell = document.getElementById("cell" + (id - width + 1));
-                if (cellClickedIsHidden) {
-                  aboveCellsToReveal.push(cell);
-                } else if (!cellClickedIsHidden && !cell.contains(bombIcon)) {
-                  aboveCellsToReveal.push(cell);
-                }
-                if (
-                  cell.hasAttribute("data-zero") &&
-                  cellsToReveal.indexOf(cell) == -1
-                ) {
-                  cellsToReveal.push(cell);
-                }
+                cellsAround.push(
+                  document.getElementById("cell" + (id - width + 1))
+                );
               }
             }
 
             // CASES EN-DESSOUS
             if (id < width * height - width) {
               if ((id - 1) % height !== 0) {
-                cell = document.getElementById(
-                  "cell" + (id - 1 + Number(width))
+                cellsAround.push(
+                  document.getElementById("cell" + (id - 1 + Number(width)))
                 );
-                if (cellClickedIsHidden) {
-                  aboveCellsToReveal.push(cell);
-                } else if (!cellClickedIsHidden && !cell.contains(bombIcon)) {
-                  aboveCellsToReveal.push(cell);
-                }
-                if (
-                  cell.hasAttribute("data-zero") &&
-                  cellsToReveal.indexOf(cell) == -1
-                ) {
-                  cellsToReveal.push(cell);
-                }
               }
-
-              cell = document.getElementById("cell" + (Number(width) + id));
-              if (cellClickedIsHidden) {
-                aboveCellsToReveal.push(cell);
-              } else if (!cellClickedIsHidden && !cell.contains(bombIcon)) {
-                aboveCellsToReveal.push(cell);
-              }
-              if (
-                cell.hasAttribute("data-zero") &&
-                cellsToReveal.indexOf(cell) == -1
-              ) {
-                cellsToReveal.push(cell);
-              }
-
+              cellsAround.push(
+                document.getElementById("cell" + (Number(width) + id))
+              );
               if (id % height !== 0) {
-                cell = document.getElementById(
-                  "cell" + (Number(width) + id + 1)
+                cellsAround.push(
+                  document.getElementById("cell" + (Number(width) + id + 1))
                 );
-                if (cellClickedIsHidden) {
-                  aboveCellsToReveal.push(cell);
-                } else if (!cellClickedIsHidden && !cell.contains(bombIcon)) {
-                  aboveCellsToReveal.push(cell);
-                }
-                if (
-                  cell.hasAttribute("data-zero") &&
-                  cellsToReveal.indexOf(cell) == -1
-                ) {
-                  cellsToReveal.push(cell);
-                }
               }
             }
 
             // CASE DEVANT
             if (id < width * height - 1 && id % height !== 0) {
-              cell = document.getElementById("cell" + (id + 1));
-              if (cellClickedIsHidden) {
-                aboveCellsToReveal.push(cell);
-              } else if (!cellClickedIsHidden && !cell.contains(bombIcon)) {
-                aboveCellsToReveal.push(cell);
-              }
-              if (
-                cell.hasAttribute("data-zero") &&
-                cellsToReveal.indexOf(cell) == -1
-              ) {
-                cellsToReveal.push(cell);
-              }
+              cellsAround.push(document.getElementById("cell" + (id + 1)));
             }
 
             // CASE DERRIERE
             if (id > 1 && (id - 1) % height !== 0) {
-              cell = document.getElementById("cell" + (id - 1));
-              if (cellClickedIsHidden) {
-                aboveCellsToReveal.push(cell);
-              } else if (!cellClickedIsHidden && !cell.contains(bombIcon)) {
+              cellsAround.push(document.getElementById("cell" + (id - 1)));
+            }
+
+            cellsAround.forEach(function(cell) {
+              if (!cell.childNodes[0].hasChildNodes()) {
                 aboveCellsToReveal.push(cell);
               }
               if (
@@ -375,31 +454,26 @@
               ) {
                 cellsToReveal.push(cell);
               }
-            }
+            });
 
-            aboveCellsToReveal.forEach(function(c) {
-              c.classList.add("hideCache");
+            aboveCellsToReveal.forEach(function(cell) {
+              cell.classList.add("hideCache");
+              if (hasClass(cell.childNodes[1], "fas fa-bomb")) revealAll(cell);
             });
           }
 
           if (cellsToReveal.length > 0) {
-            reveal(cellsToReveal, forbiddenIDs, true);
+            reveal(cellsToReveal, forbiddenIDs);
           }
         }
 
-        return gridArray;
+        let checkWin = setInterval(function(){
+          if(document.querySelectorAll("td.hideCache").length == width*height-bombNumber){
+            alert("YOU WIN !!");
+            clearInterval(checkWin);
+          }
+        }, 1000);
       }
-
-      const radio = document.getElementsByName("gridSize");
-      document.getElementsByName("gridSize").forEach(input =>
-        input.addEventListener("change", function() {
-          createGridArray(
-            this.dataset.width,
-            this.dataset.height,
-            this.dataset.bombnumber
-          );
-        })
-      );
     </script>
   </body>
 </html>
