@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <link
+      rel="stylesheet"
+      href="https://use.fontawesome.com/releases/v5.7.2/css/all.css"
+      integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr"
+      crossorigin="anonymous"
+    />
+    <link rel="stylesheet" href="minesweeper.css">
+    <title>Minesweeper</title>
+    <style>
+      
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>
+        Minesweeper
+        <i class="fas fa-bomb"></i>
+      </h1>
+      <form action="" id="form">
+        <fieldset>
+          <label for="gridSize">20 x 20</label>
+          <input
+            checked="checked"
+            name="gridSize"
+            data-height="20"
+            data-width="20"
+            data-bombnumber="50"
+            type="radio"
+          />
+        </fieldset>
+        <fieldset>
+          <label for="gridSize">20 x 30</label>
+          <input
+            name="gridSize"
+            data-height="20"
+            data-width="30"
+            data-bombnumber="100"
+            type="radio"
+          />
+        </fieldset>
+        <fieldset>
+          <label for="gridSize">30 x 50</label>
+          <input
+            name="gridSize"
+            data-height="30"
+            data-width="50"
+            data-bombnumber="200"
+            type="radio"
+          />
+        </fieldset>
+        <button id="startButton">Go !</button>
+      </form>
+    </header>
+    <main>
+      <table id="grid"></table>
+      <div id="timeflags">
+        <div id="timer"></div>
+        <div id="flags"></div>
+      </div>
+    </main>
+    <div id="veil"></div>
+    <div id="controls">
+      <article>
+        <h2>Objectif :</h2>
+        <p> - Révélez toutes les cases sans bombe.</p>
+        <p> - Vous perdez lorsque vous cliquez sur une bombe.</p>
+      </article>
+      <article>
+        <h2>Contrôles :</h2>
+        <p><strong>Clic gauche :</strong> révèle une case.</p>
+        <p>
+          <strong>Clic droit :</strong>
+          <ol>
+            <li>Pose un drapeau sur une case non révélée (bloque le clic) ;</li>
+            <li>Le remplace par un point d'interrogation ;</li>
+            <li>Enlève le point d'interrogation.</li>
+          </ol>
+        </p>
+        <p><strong>Clic droit + clic gauche sur une case révélée :</strong> découvre les cases adjacentes sauf celles marquées par un drapeau.</p>
+      </article>
+      <button id="ok">Compris</button>
+    </div>
+    <script src="library.js"></script>
+    <script src="grid.js"></script>
+    <script>
+      const form = document.querySelector("#form");
+      const startButton = document.querySelector("#startButton");
+      const gridSize = document.getElementsByName("gridSize");
+      const veil = document.querySelector("#veil");
+      const controls = document.querySelector("#controls");
+      const ok = document.querySelector("#ok");
+      const timer = document.getElementById("timer");
+
+      startButton.addEventListener("click", function(e) {
+        e.preventDefault();
+        // form.style.display = "none";
+        if (this.textContent == "Go !") {
+          this.textContent = "Try again ?";
+          setTimeout(alertControls, 1000);
+        }
+        displayGrid(createGrid(
+          document.querySelector('input[name="gridSize"]:checked').dataset.width,
+          document.querySelector('input[name="gridSize"]:checked').dataset.height,
+          document.querySelector('input[name="gridSize"]:checked').dataset.bombnumber
+        ));
+        document.querySelectorAll("td").forEach(td => td.childNodes[0].addEventListener("click", startTimer));
+      });
+
+      function startTimer(){
+        document.querySelectorAll("td").forEach(td => td.childNodes[0].removeEventListener("click", startTimer));
+        let count = 0;
+        setInterval(function(){
+          count++;
+          timer.textContent = count;
+          let flagCount =
+            document.querySelector('input[name="gridSize"]:checked').dataset.bombnumber;
+          const flags = document.getElementById("flags");
+          flags.innerHTML = flagCount + '<i class="far fa-flag"></i>';
+        }, 1000);
+      }
+
+      ok.addEventListener("click", function(){
+        veil.style.display = "none";
+        controls.style.display = "none";
+        
+      })
+
+      function alertControls() {
+        veil.style.display = "block";
+        controls.style.display = "block";
+      }
+
+
+      
+    </script>
+  </body>
+</html>
